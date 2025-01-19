@@ -40,7 +40,7 @@ export const signup = async (req, res)=>{
             await newUser.save();
 
             res.status(200).json({
-                _id:newUser.fullName,
+                _id:newUser._id,
                 fullname: newUser.fullName,
                 username: newUser.username,
                 email: newUser.email,
@@ -72,7 +72,7 @@ export const login = async (req, res)=>{
         generateTokenAndSetCookie(user._id, res);
 
         res.status(200).json({
-            _id:user.fullName,
+            _id:user._id,
             fullname: user.fullName,
             username: user.username,
             email: user.email,
