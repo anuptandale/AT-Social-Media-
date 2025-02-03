@@ -18,7 +18,8 @@ cloudinary.config({
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(express.json()); // middleware to parse req.body
+app.use(express.json({limit:"5mb"})); // middleware to parse req.body
+//before we are not able to upload image in post as default limit is 4kb so we set limit of 5mb now we can upload the images with size less equal to 5mb
 app.use(express.urlencoded({extended: true})); //to parse form data(url) bcz of this we can write payload in urlencoded except raw(json) in postman
 
 app.use(cookieParser());
