@@ -8,11 +8,20 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import LoadingSpinner from "./LoadingSpinner";
 import toast from "react-hot-toast";
+import { formatPostDate } from "../../utils/date";
 const Post = ({ post }) => {
 	const [comment, setComment] = useState("");
 	const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 	const queryClient = useQueryClient();
-	const { mutate: deletePost, isPending:isDeleting } = useMutation({
+
+	const postOwner = post.user;
+	const isLiked = post.likes.includes(authUser._id);
+
+	const isMyPost = authUser._id === post.user._id;
+
+	const formattedDate = formatPostDate(post.createdAt);
+
+	const { mutate: deletePost, isPending: isDeleting } = useMutation({
 		mutationFn: async () => {
 			try {
 				const res = await fetch(`/api/posts/${post._id}`, {
@@ -29,17 +38,17 @@ const Post = ({ post }) => {
 		},
 		onSuccess: () => {
 			toast.success("Post deleted successfully");
-			queryClient.invalidateQueries({queryKey:["posts"]});//invalidate the query to refetch the data
+			queryClient.invalidateQueries({ queryKey: ["posts"] });//invalidate the query to refetch the data
 		}
 	})
-	const {mutate:likePost, isPending:isLiking} = useMutation({
+	const { mutate: likePost, isPending: isLiking } = useMutation({
 		mutationFn: async () => {
 			try {
-				const res = await fetch(`/api/posts/like/${post._id}`,{
-					method:"POST",
+				const res = await fetch(`/api/posts/like/${post._id}`, {
+					method: "POST",
 				});
 				const data = await res.json();
-				if(!res.ok){
+				if (!res.ok) {
 					throw new Error(data.error || "Something went wrong");
 				}
 				return data;
@@ -47,7 +56,7 @@ const Post = ({ post }) => {
 				throw new Error(error.message || "Something went wrong");
 			}
 		},
-		onSuccess:(updatedLikes)=>{
+		onSuccess: (updatedLikes) => {
 			// toast.success("Post liked successfully");
 
 			//*****IMPORTANT ******
@@ -58,41 +67,68 @@ const Post = ({ post }) => {
 			//Instead we are updating the cash data so no refresh of post component
 			//for this we have made changes in likeUnlike controller in backend were we are returning updatedLikes data
 			//here using queryClient cash we are updating the old updatedlikes data
-			queryClient.setQueryData(["posts"], (oldData)=>{
-				return oldData.map(p=>{
-					if(p._id === post._id){
-						return {...p, likes:updatedLikes}
+			queryClient.setQueryData(["posts"], (oldData) => {
+				return oldData.map(p => {
+					if (p._id === post._id) {
+						return { ...p, likes: updatedLikes }
 					}
 					return p
 				})
 			})
 		},
+		onError: (error) => {
+			toast.error(error.message);
+		}
+	});
+
+	const { mutate: commentPost, isPending: isCommenting } = useMutation({
+		mutationFn: async () => {
+			try {
+				const res = await fetch(`/api/posts/comments/${post._id}`, {
+					method: "POST",
+					headers: {
+						"Content-type": "application/json",
+					},
+					body: JSON.stringify({ text: comment })
+				})
+				const data = await res.json();
+				if(!res.ok){
+					throw new Error(data.error || "Something went wrong");
+				}
+				return data;
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		onSuccess:()=>{
+			toast.success("Comment posted successfully");
+			setComment("");
+			queryClient.invalidateQueries({queryKey:["posts"]});
+		},
 		onError:(error)=>{
 			toast.error(error.message);
 		}
 	});
-	const postOwner = post.user;
-	const isLiked = post.likes.includes(authUser._id);
 
-	const isMyPost = authUser._id === post.user._id;
 
-	const formattedDate = "1h";
 
-	const isCommenting = false;
+	// const isCommenting = false;
 
 	const handleDeletePost = () => {
 		deletePost();
 	};
 
 	const handlePostComment = (e) => {
-		e.preventDefault();
+		e.preventDefault();//bcz it is form
+		if(isCommenting) return;
+		commentPost();
 	};
 
-	const handleLikePost = () => { 
+	const handleLikePost = () => {
 		//this if check will help when we click on like button so to reflect changes it takes max of 1 sec but
 		//user again click that button then this function will get called again so to avaid it, if if-check is liking state
 		//it will return likePost() will not get called
-		if(isLiking) return;
+		if (isLiking) return;
 		likePost();
 	};
 
@@ -201,11 +237,11 @@ const Post = ({ post }) => {
 								<span className='text-sm text-slate-500 group-hover:text-green-500'>0</span>
 							</div>
 							<div className='flex gap-1 items-center group cursor-pointer' onClick={handleLikePost}>
-								{isLiking && <LoadingSpinner size="sm"/>}
+								{isLiking && <LoadingSpinner size="sm" />}
 								{!isLiked && !isLiking && (
 									<FaRegHeart className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500' />
 								)}
-								{isLiked&& !isLiking && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
+								{isLiked && !isLiking && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
 
 								<span
 									className={`text-sm group-hover:text-pink-500 ${isLiked ? "text-pink-500" : "text-slate-500"
