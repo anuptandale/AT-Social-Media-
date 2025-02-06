@@ -30,7 +30,7 @@ export const followUnfollowUser = async (req, res)=>{
             return res.status(400).json({error: "User not found"});
         }
         const isFollowing = currentUser.following.includes(id);
-
+        console.log("hello")
         if(isFollowing){
             //unfollow the user
             // removing our id from his followers
@@ -38,17 +38,20 @@ export const followUnfollowUser = async (req, res)=>{
             // removing his id from our following
             await User.findByIdAndUpdate(req.user._id, {$pull:{following:id}});
             res.status(200).json({message: "User unfollowed successfully"});
-        }else{
+        }else{ 
             // Follow the user
             await User.findByIdAndUpdate(id, {$push:{followers:req.user._id}});
             await User.findByIdAndUpdate(req.user._id, {$push:{following:id}});
             // send notification to the user
+            
             const newNotification = new Notification({
                 type:"follow",
                 from:req.user._id,
                 to: userToModify._id
             })
+            console.log("Creating follow notification:", newNotification);
             await newNotification.save();
+            console.log("Follow notification saved successfully");
             res.status(200).json({message: "User followed successfully"});
         }
     } catch (error) {
