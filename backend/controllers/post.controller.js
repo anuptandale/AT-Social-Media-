@@ -77,15 +77,19 @@ export const commentOnPost = async (req, res) => {
 }
 
 export const likeUnlikePost = async (req, res) => {
+    
     try {
         const userId = req.user._id;
         const { id: postId } = req.params;
         const post = await Post.findById(postId);
-
+        console.log("id",userId);
+        console.log("postid", postId);
+        
         if (!post) {
             return res.status(404).json({ error: "Post not found" });
         }
         const userLikedPost = post.likes.includes(userId);
+        
         if (userLikedPost) {
             await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
             await User.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
@@ -95,8 +99,9 @@ export const likeUnlikePost = async (req, res) => {
             res.status(200).json(updatedLikes);
         } else {
             post.likes.push(userId);
-            await Post.updateOne({ _id: userId }, { $push: { likedPosts: postId } });
+            await User.updateOne({ _id: userId }, { $push: { likedPosts: postId } });
             await post.save();
+
             const notification = new Notification({
                 from: userId,
                 to: post.user,
@@ -136,9 +141,10 @@ export const getAllPosts = async (req, res) => {
 
 export const getLikedPosts = async (req, res) => {
     const userId = req.params.id;
-
+   
     try {
         const user = await User.findById(userId);
+        console.log("user", user)
         if (!user) return res.status(404).json({ error: "User not found" });
         const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })
             .populate({

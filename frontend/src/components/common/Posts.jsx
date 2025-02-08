@@ -4,14 +4,19 @@ import { POSTS } from "../../utils/db/dummy";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-const Posts = ({ feedType }) => {
-	// const isLoading = false;
-	const getPostEndpoint = ({ feedType } = {}) => {
+const Posts = ({ feedType, username, userId }) => {
+	
+	const getPostEndpoint = (  ) => {
+		// console.log("feed",feedType);
 		switch (feedType) {
 			case "forYou":
 				return "/api/posts/all";
 			case "following":
 				return "/api/posts/following";
+			case "posts":
+				return `/api/posts/user/${username}`;
+			case "likes":
+				return `/api/posts/likes/${userId}`;
 			default:
 				return "/api/posts/all";
 		}
@@ -22,6 +27,7 @@ const Posts = ({ feedType }) => {
 		queryKey: ["posts"],
 		queryFn: async () => {
 			try {
+				console.log(POST_ENDPOINT)
 				const res = await fetch(POST_ENDPOINT);
 				const data = await res.json();
 
@@ -36,7 +42,7 @@ const Posts = ({ feedType }) => {
 	})
 	useEffect(() => {
 		refetch();
-	}, [feedType, refetch])
+	}, [feedType, refetch, username]) //if we choose different profile from who to follow so below posts should change to his posts
 	return (
 		<>
 			{(isLoading || isRefetching) && (
