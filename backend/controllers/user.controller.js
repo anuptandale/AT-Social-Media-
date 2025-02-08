@@ -85,11 +85,14 @@ export const getSuggestedUser = async(req,res)=>{
 }
 
 export const updateUser = async (req, res)=>{
-    const {fullName, email, username, currentPassword, newPassword, bio, link} = req.body;
+    const {fullName, email, username, currentPassword, newPassword, bio, link} = req.body.formData;
+    
     let { profileImg, coverImg } = req.body;
     const userId = req.user._id;
+    
     try {
         let user = await User.findById(userId);
+        
         if(!user) return res.status(404).json({message: "User not found"});
 
         if((!newPassword && currentPassword) || (newPassword && !currentPassword)){
@@ -129,8 +132,9 @@ export const updateUser = async (req, res)=>{
         user.link = link || user.link;
         user.profileImg = profileImg || user.profileImg;
         user.coverImg = coverImg || user.coverImg;
-
+        // console.log(user.fullName,"  " ,fullName);
         user = await user.save();
+
         user.password=null; // here password is null in response so that others can not see it and this will not change it in database as we are not saving it 
         return res.status(200).json(user);
     } catch (error) {
