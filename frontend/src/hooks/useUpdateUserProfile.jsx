@@ -6,6 +6,7 @@ const useUpdateUserProfile = ()=>{
     const {mutate:updateProfile, isPending:isUpdatingProfile} = useMutation({
         mutationFn: async (formData) => {
            try {
+            console.log("fuhsduhasliufdhds",formData);
                const res = await fetch(`/api/users/update`,{
                    method: "POST",
                    headers:{
@@ -14,6 +15,7 @@ const useUpdateUserProfile = ()=>{
                    body: JSON.stringify({formData})
                })
                const data = await res.json();
+               console.log("fuhsduhasliufdhds",data);
                if(!res.ok){
                    throw new Error(data.error || "Something went wrong");
                }
@@ -23,7 +25,7 @@ const useUpdateUserProfile = ()=>{
            }
         },
         onSuccess:()=>{
-            console.log("hello")
+            
            toast.success("Profile updated successfully");
            console.log("hello1")
            Promise.all([
