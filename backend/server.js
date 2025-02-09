@@ -1,3 +1,4 @@
+import path from "path"
 import express from "express"
 import authRoutes from "./routes/auth.route.js"
 import userRoutes from "./routes/user.route.js"
@@ -17,6 +18,7 @@ cloudinary.config({
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const __dirname = path.resolve();
 
 app.use(express.json({limit:"5mb"})); // middleware to parse req.body
 //before we are not able to upload image in post as default limit is 4kb so we set limit of 5mb now we can upload the images with size less equal to 5mb
@@ -28,6 +30,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
+
+if(process.env.NODE_ENV === "production"){
+    app.use(express.static(path.join(__dirname,"/frontend/dist")));
+    app.get("*", (req,res)=>{
+        res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+    })
+}
 
 // console.log(process.env.MONGO_URI)
 app.listen(PORT, ()=>{
